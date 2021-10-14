@@ -74,6 +74,7 @@ function Slideshow (events, dom, options, callback) {
     source = source || '';
 
     slides = createSlides(source, options);
+    console.log(source, options, slides);
     expandVariables(slides);
 
     links = {};

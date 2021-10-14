@@ -98,43 +98,14 @@ Slide.prototype.expandVariables = function (contentOnly, content, expandResult) 
     content = content !== undefined ? content : this.content;
     expandResult = expandResult || {};
 
-    var expandedContent = [];
-
     for (i = 0; i < content.length; ++i) {
         if (typeof content[i] === 'string') {
-            const pieces = [];
-
-            let start = 0;
-            const matches = content[i].matchAll(/(\\)?(\{\{([^\}\n]+)\}\})/g);
-
-            // expand variables, push in-between text + expands to pieces
-            for (const match of matches) {
-                const leadingText = content[i].substr(start, match.index);
-                if (leadingText !== '') {
-                    pieces.push(leadingText);
-                }
-
-                const expansion = expand(...match);
-                pieces.push(expansion);
-                start = match.index + match[0].length;
-            }
-
-            const trailingText = content[i].substr(start);
-            if (trailingText !== '') {
-                pieces.push(trailingText);
-            }
-            compact(pieces);
-
-            expandedContent.push(...pieces);
+            content[i] = content[i].replace(/(\\)?(\{\{([^\}\n]+)\}\})/g, expand);
         }
         else {
             this.expandVariables(contentOnly, content[i].content, expandResult);
-            expandedContent.push(content[i]);
         }
     }
-
-    // replace original content
-    content.splice(0, content.length, ...expandedContent);
 
     function expand (match, escaped, unescapedMatch, property) {
         var propertyName = property.trim()
@@ -150,9 +121,6 @@ Slide.prototype.expandVariables = function (contentOnly, content, expandResult) 
         }
 
         propertyValue = properties[propertyName];
-        if (propertyValue instanceof Array && propertyValue.length === 1 && typeof propertyValue[0] === 'string') {
-            propertyValue = propertyValue[0];
-        }
 
         if (propertyValue !== undefined) {
             expandResult[propertyName] = propertyValue;
@@ -160,28 +128,6 @@ Slide.prototype.expandVariables = function (contentOnly, content, expandResult) 
         }
 
         return propertyName === 'content' ? '' : unescapedMatch;
-    }
-
-    function compact(pieces) {
-        if (pieces.length === 0) {
-            return [];
-        }
-
-        const compactedPieces = [pieces[0]];
-        for (let i=1; i<pieces.length; ++i) {
-            const p = pieces[i];
-            if (typeof p === 'string' && typeof pieces[i-1] === 'string') {
-                compactedPieces[compactedPieces.length - 1] += p;
-            }
-            else if (p instanceof Array) {
-                compactedPieces.push(...p);
-            }
-            else {
-                compactedPieces.push(p);
-            }
-        }
-
-        pieces.splice(0, pieces.length, ...compactedPieces);
     }
 
     return expandResult;

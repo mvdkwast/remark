@@ -34,7 +34,7 @@ target.highlighter = function () {
 };
 
 target.test = function () {
-  target['lint']();
+//  target['lint']();
   target['bundle']();
   target['test-bundle']();
 

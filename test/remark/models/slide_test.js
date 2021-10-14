@@ -92,6 +92,41 @@ describe('Slide', function () {
 
       slide.content.should.eql(['{{name}}', '']);
     });
+
+      it('should expand simple content correctly', function () {
+          var template = new Slide(1, 1, {
+              content: ['a{{content}}b'],
+          })
+              , slide = new Slide(1, 1, {
+                  content: ['slide']
+          }, template);
+
+          slide.content.should.eql(['aslideb']);
+      });
+
+      it('should expand list content correctly', function () {
+          var template = new Slide(1, 1, {
+              content: ['a{{content}}b'],
+          })
+              , slide = new Slide(1, 1, {
+              content: ['slide', 'slide']
+          }, template);
+
+          slide.content.should.eql(['a', 'slide', 'slide', 'b']);
+      });
+
+      it('should expand structured content correctly', function () {
+          var template = new Slide(1, 1, {
+              content: ['a{{content}}b'],
+          })
+              , slide = new Slide(1, 1, {
+              content: [
+                  { block: false, class: 'the-class', content: [ 'slide' ] }
+              ],
+          }, template);
+
+          slide.content.should.eql(['a', { block: false, class: 'the-class', content: [ 'slide' ] }, 'b']);
+      });
   });
 
   describe('variables', function () {
