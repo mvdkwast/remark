@@ -178,7 +178,7 @@ function appendTo (element, content) {
 }
 
 function extractProperties (source, properties) {
-  var propertyFinder = /^\n*([-\w]+):([^$\n]*)|\n*(?:<!--\s*)([-\w]+):([^$\n]*?)(?:\s*-->)/i
+  var propertyFinder = /^\n*([-%\w][-\w]*):([^$\n]*)|\n*(?:<!--\s*)([-\w]+):([^$\n]*?)(?:\s*-->)/i
     , match
     ;
 
