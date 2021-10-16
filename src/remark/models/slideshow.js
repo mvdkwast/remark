@@ -4,15 +4,15 @@ var Navigation = require('./slideshow/navigation')
   , Slide = require('./slide')
   , Parser = require('../parser')
   , macros = require('../macros')
-  ;
+;
 
 module.exports = Slideshow;
 
-function Slideshow (events, dom, options, callback) {
+function Slideshow(events, dom, options, callback) {
   var self = this
     , slides = []
     , links = {}
-    ;
+  ;
 
   slides.byName = {};
   options = options || {};
@@ -62,20 +62,18 @@ function Slideshow (events, dom, options, callback) {
 
   if (options.sourceUrl) {
     loadFromUrl(options.sourceUrl, callback);
-  }
-  else {
+  } else {
     loadFromString(options.source);
     if (typeof callback === 'function') {
       callback(self);
     }
   }
 
-  function loadFromString (source) {
+  function loadFromString(source) {
     source = source || '';
 
     slides = createSlides(source, options);
     expandVariables(slides);
-    console.log(slides);
 
     links = {};
     slides.forEach(function (slide) {
@@ -89,62 +87,76 @@ function Slideshow (events, dom, options, callback) {
     events.emit('slidesChanged');
   }
 
-  function loadFromUrl (url, callback) {
-    var xhr = new dom.XMLHttpRequest();
-    xhr.open('GET', options.sourceUrl, true);
-    xhr.onload = function (e) {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          options.source = xhr.responseText.replace(/\r\n/g, '\n');
-          loadFromString(options.source);
-          if (typeof callback === 'function') {
-            callback(self);
-          }
-        } else {
-          throw Error(xhr.statusText);
-        }
+  function loadFromUrl(url, callback) {
+    options.source = options.source || '';
+
+    const urls = typeof url === 'string' ? [url] : url;
+
+    const promises = urls.map(u => {
+      let mdUrl;
+      let properties = {};
+
+      if (typeof u === 'string') {
+        mdUrl = u;
+      } else {
+        mdUrl = u.url;
+        properties = u.properties || {};
       }
-    };
-    xhr.onerror = function (e) {
-      throw Error(xhr.statusText);
-    };
-    xhr.send(null);
-    return xhr;
+
+      return fetch(mdUrl).then(r => r.text().then(t => {
+        if (properties) {
+          t = Object.entries(properties).map(entry => `%${entry[0]}: ${entry[1]}\n`).join('') + t;
+        }
+        return Promise.resolve(t);
+      }));
+    });
+
+
+    Promise.all(promises)
+      .then(markdownFiles => {
+        options.source += markdownFiles.join('\n---\n');
+        loadFromString(options.source);
+        if (typeof callback === 'function') {
+          callback(self);
+        }
+      });
   }
 
-  function update () {
+  function update() {
     events.emit('resize');
   }
 
-  function getLinks () {
+  function getLinks() {
     return links;
   }
 
-  function getSlides () {
-    return slides.map(function (slide) { return slide; });
+  function getSlides() {
+    return slides.map(function (slide) {
+      return slide;
+    });
   }
 
-  function getSlideCount () {
+  function getSlideCount() {
     return slides.length;
   }
 
-  function getSlideByName (name) {
+  function getSlideByName(name) {
     return slides.byName[name];
   }
 
-  function getSlidesByNumber (number) {
+  function getSlidesByNumber(number) {
     return slides.byNumber[number];
   }
 
-  function togglePresenterMode () {
+  function togglePresenterMode() {
     events.emit('togglePresenterMode');
   }
 
-  function toggleHelp () {
+  function toggleHelp() {
     events.emit('toggleHelp');
   }
 
-  function toggleBlackout () {
+  function toggleBlackout() {
     events.emit('toggleBlackout');
   }
 
@@ -152,19 +164,19 @@ function Slideshow (events, dom, options, callback) {
     events.emit('toggleMirrored');
   }
 
-  function toggleFullscreen () {
+  function toggleFullscreen() {
     events.emit('toggleFullscreen');
   }
 
-  function createClone () {
+  function createClone() {
     events.emit('createClone');
   }
 
-  function resetTimer () {
+  function resetTimer() {
     events.emit('resetTimer');
   }
 
-  function getOrDefault (key, defaultValue) {
+  function getOrDefault(key, defaultValue) {
     return function () {
       if (options[key] === undefined) {
         return defaultValue;
@@ -175,14 +187,14 @@ function Slideshow (events, dom, options, callback) {
   }
 }
 
-function createSlides (slideshowSource, options) {
+function createSlides(slideshowSource, options) {
   var parser = new Parser()
-   ,  parsedSlides = parser.parse(slideshowSource, macros, options)
+    , parsedSlides = parser.parse(slideshowSource, macros, options)
     , slides = []
     , byName = {}
     , propertiesState = {}
     , layoutSlide
-    ;
+  ;
 
   slides.byName = {};
   slides.byNumber = {};
@@ -193,31 +205,25 @@ function createSlides (slideshowSource, options) {
 
     if (slide.properties.continued === 'true' && i > 0) {
       template = slides[slides.length - 1];
-    }
-    else if (byName[slide.properties.template]) {
+    } else if (byName[slide.properties.template]) {
       template = byName[slide.properties.template];
-    }
-    else if (slide.properties.layout === 'false') {
+    } else if (slide.properties.layout === 'false') {
       layoutSlide = undefined;
-    }
-    else if (layoutSlide && slide.properties.layout !== 'true') {
+    } else if (layoutSlide && slide.properties.layout !== 'true') {
       template = layoutSlide;
     }
 
     if (slide.properties.continued === 'true' &&
-        options.countIncrementalSlides === false &&
-        slide.properties.count === undefined) {
+      options.countIncrementalSlides === false &&
+      slide.properties.count === undefined) {
       slide.properties.count = 'false';
     }
 
     if (slide.properties) {
-        console.log(slide.properties);
-        Object.keys(slide.properties)
-            .filter(k => k[0] === '%')
-            .forEach(k => propertiesState[k.substr(1)] = slide.properties[k]);
+      Object.keys(slide.properties)
+        .filter(k => k[0] === '%')
+        .forEach(k => propertiesState[k.substr(1)] = slide.properties[k]);
     }
-
-    console.log(propertiesState);
 
     Object.keys(propertiesState).forEach(k => {
       if (slide.properties[k] !== undefined) {
@@ -230,8 +236,8 @@ function createSlides (slideshowSource, options) {
     var slideClasses = (slide.properties['class'] || '').split(/,| /)
       , excludedClasses = options.excludedClasses || []
       , slideIsIncluded = slideClasses.filter(function (c) {
-          return excludedClasses.indexOf(c) !== -1;
-        }).length === 0;
+      return excludedClasses.indexOf(c) !== -1;
+    }).length === 0;
 
     if (slideIsIncluded && slide.properties.layout !== 'true' && slide.properties.count !== 'false') {
       slideNumber++;
@@ -267,7 +273,7 @@ function createSlides (slideshowSource, options) {
   return slides;
 }
 
-function expandVariables (slides) {
+function expandVariables(slides) {
   slides.forEach(function (slide) {
     slide.expandVariables();
   });
