@@ -75,6 +75,7 @@ function Slideshow (events, dom, options, callback) {
 
     slides = createSlides(source, options);
     expandVariables(slides);
+    console.log(slides);
 
     links = {};
     slides.forEach(function (slide) {
@@ -179,6 +180,7 @@ function createSlides (slideshowSource, options) {
    ,  parsedSlides = parser.parse(slideshowSource, macros, options)
     , slides = []
     , byName = {}
+    , propertiesState = {}
     , layoutSlide
     ;
 
@@ -207,6 +209,23 @@ function createSlides (slideshowSource, options) {
         slide.properties.count === undefined) {
       slide.properties.count = 'false';
     }
+
+    if (slide.properties) {
+        console.log(slide.properties);
+        Object.keys(slide.properties)
+            .filter(k => k[0] === '%')
+            .forEach(k => propertiesState[k.substr(1)] = slide.properties[k]);
+    }
+
+    console.log(propertiesState);
+
+    Object.keys(propertiesState).forEach(k => {
+      if (slide.properties[k] !== undefined) {
+        slide.properties[k] += (slide.properties[k] === '' ? '' : ' ') + propertiesState[k];
+      } else {
+        slide.properties[k] = propertiesState[k];
+      }
+    });
 
     var slideClasses = (slide.properties['class'] || '').split(/,| /)
       , excludedClasses = options.excludedClasses || []
