@@ -8,6 +8,7 @@ var EventEmitter = require('events').EventEmitter
   , DefaultController = require('./controllers/defaultController')
   , Dom = require('./dom')
   , macros = require('./macros')
+  , sourceFormatters = require('./sourceformatters')
   ;
 
 module.exports = Api;
@@ -15,6 +16,7 @@ module.exports = Api;
 function Api (dom) {
   this.dom = dom || new Dom();
   this.macros = macros;
+  this.sourceFormatters = sourceFormatters;
   this.version = resources.version;
 }
 

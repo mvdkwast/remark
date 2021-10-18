@@ -47,6 +47,7 @@ function Slideshow(events, dom, options, callback) {
   self.getHighlightLanguage = getOrDefault('highlightLanguage', '');
   self.getSlideNumberFormat = getOrDefault('slideNumberFormat', '%current% / %total%');
   self.getCloneTarget = getOrDefault('cloneTarget', '_blank');
+  self.getSourceFormatter = lang => options.nomnoml ? null : options.sourceFormatters[lang];
 
   events.on('toggleBlackout', function (opts) {
     if (opts && opts.propagate === false) return;

@@ -238,6 +238,12 @@ function highlightCodeBlocks (content, slideshow) {
       return;
     }
 
+    const customFormatter = slideshow.getSourceFormatter(block.className);
+    if (customFormatter) {
+      customFormatter(block.innerText, block.className, block.parentElement);
+      return;
+    }
+
     if (highlightLines) {
       meta = extractMetadata(block);
     }
